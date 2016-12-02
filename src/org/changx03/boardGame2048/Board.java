@@ -64,6 +64,15 @@ public class Board extends Group {
         VBox.setVgrow(vFill, Priority.ALWAYS);
         vScores.getChildren().addAll(hScores, vFill);
 
+        lblTitle.getStyleClass().addAll("game-label","game-title");
+        lblSubtitle.getStyleClass().addAll("game-label","game-subtitle");
+        vScore.getStyleClass().add("game-vbox");
+        lblTit.getStyleClass().addAll("game-label","game-titScore");
+        lblScore.getStyleClass().addAll("game-label","game-score");
+        vRecord.getStyleClass().add("game-vbox");
+        lblTitBest.getStyleClass().addAll("game-label","game-titScore");
+        lblBest.getStyleClass().addAll("game-label","game-score");
+
         hTop.getChildren().addAll(lblTitle, lblSubtitle, hFill, vScores);
         hTop.setMinSize(GRID_WIDTH, TOP_HEIGHT);
         hTop.setPrefSize(GRID_WIDTH, TOP_HEIGHT);
@@ -78,6 +87,11 @@ public class Board extends Group {
         Rectangle cell = new Rectangle(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, CELL_SIZE);
         cell.setFill(Color.WHITE);
         cell.setStroke(Color.GREY);
+
+        cell.setArcHeight(CELL_SIZE/6d);
+        cell.setArcWidth(CELL_SIZE/6d);
+        cell.getStyleClass().add("game-grid-cell");
+
         return cell;
     }
 
@@ -87,6 +101,9 @@ public class Board extends Group {
                 gridGroup.getChildren().add(createCell(i, j));
             }
         }
+
+        gridGroup.getStyleClass().add("game-grid");
+        hBottom.getStyleClass().add("game-backGrid");
 
         gridGroup.setManaged(false);
         gridGroup.setLayoutX(BORDER_WIDTH);

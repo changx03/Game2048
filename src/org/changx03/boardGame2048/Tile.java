@@ -19,7 +19,9 @@ public class Tile extends Label {
         setMinSize(squareSize, squareSize);
         setMaxSize(squareSize, squareSize);
         setPrefSize(squareSize, squareSize);
-        setStyle("-fx-background-color: #c9c9c9;");
+
+        getStyleClass().addAll("game-label", "game-tile-" + value);
+
         setAlignment(Pos.CENTER);
 
         this.value = value;
