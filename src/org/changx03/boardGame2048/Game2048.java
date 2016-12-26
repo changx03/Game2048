@@ -3,6 +3,7 @@ package org.changx03.boardGame2048;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
@@ -31,6 +32,14 @@ public class Game2048 extends Application {
 
         scene.getStylesheets().add(Game2048.class.getResource("game.css").toExternalForm());
         root.getStyleClass().addAll("game-root");
+
+        scene.setOnKeyPressed(key -> {
+            KeyCode keyCode = key.getCode();
+            if(keyCode.isArrowKey()) {
+                Direction dir = Direction.valueFor(keyCode);
+                gameManager.move(dir);
+            }
+        });
 
         primaryStage.setTitle("Game 2048");
         primaryStage.setScene(scene);

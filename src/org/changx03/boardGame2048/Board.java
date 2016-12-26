@@ -36,6 +36,8 @@ public class Board extends Group {
     private final Label lblOverText = new Label();
     private final HBox buttonsOverlay = new HBox();
 
+
+
     public Board() {
         createScore();
         createGrid();
@@ -143,4 +145,6 @@ public class Board extends Group {
         buttonsOverlay.setMinSize(GRID_WIDTH, GRID_WIDTH / 2);
         buttonsOverlay.setSpacing(10);
     }
+
+    public Group getGridGroup() { return gridGroup; }
 }

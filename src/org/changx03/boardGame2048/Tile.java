@@ -29,6 +29,8 @@ public class Tile extends Label {
         setText(Integer.toString(value));
     }
 
+    public int getValue(){ return value; }
+
     public static Tile newRandomTile() {
 
         return newTile(new Random().nextDouble() < 0.9 ? 2 : 4);

@@ -44,6 +44,6 @@ public class Location {
 
     public Location offset(Direction direction) {
 
-        return new Location(x, y);
+        return new Location(x + direction.getX(), y + direction.getY());
     }
 }
