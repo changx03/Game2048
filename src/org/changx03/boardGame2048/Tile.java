@@ -47,4 +47,24 @@ public class Tile extends Label {
     public void setLocation(Location location) {
         this.location = location;
     }
+
+    public void merge(Tile another) {
+        getStyleClass().remove("game-tile-" + value);
+        this.value += another.getValue();
+        setText(Integer.toString(value));
+        merged = true;
+        getStyleClass().add("game-tile-" + value);
+    }
+
+    public boolean isMergeable(Tile anotherTile) {
+        return anotherTile != null && getValue()==anotherTile.getValue();
+    }
+
+    public boolean isMerged() {
+        return merged;
+    }
+
+    public void setMerged(boolean merged) {
+        this.merged = merged;
+    }
 }

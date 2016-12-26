@@ -1,13 +1,23 @@
 package org.changx03.boardGame2048;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.geometry.Pos;
 import javafx.scene.*;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.util.Duration;
 
 /**
  * Created by gungr on 1/12/2016.
@@ -29,19 +39,29 @@ public class Board extends Group {
     private final VBox vScore = new VBox(0);
     private final Label lblScore = new Label("0");
     private final Label lblBest = new Label("0");
+    private final Label lblPoints = new Label();
 
     private final Group gridGroup = new Group();
+    private final IntegerProperty gameMovePoints = new SimpleIntegerProperty(0);
+    private final IntegerProperty gameScoreProperty = new SimpleIntegerProperty(0);
+    private final Timeline animateAddedPoints = new Timeline();
 
     private final HBox overlay = new HBox();
-    private final Label lblOverText = new Label();
+    private final Label lOvrText = new Label();
     private final HBox buttonsOverlay = new HBox();
+    private final Button bTry = new Button("Try again");
+    private final Button bContinue = new Button("Keep going");
+
+    private final BooleanProperty gameWonProperty = new SimpleBooleanProperty(false);
+    private final BooleanProperty gameOverProperty = new SimpleBooleanProperty(false);
+    private final BooleanProperty resetGame = new SimpleBooleanProperty(false);
 
 
 
     public Board() {
         createScore();
         createGrid();
-//        initGameProperties();
+        initGameProperties();
     }
 
     private void createScore() {
@@ -83,6 +103,34 @@ public class Board extends Group {
         vGame.getChildren().add(hTop);
         hMid.setMinSize(GRID_WIDTH, GAP_HEIGHT);
         vGame.getChildren().add(hMid);
+
+        lblPoints.getStyleClass().addAll("game-label","game-points");
+        lblPoints.setAlignment(Pos.CENTER);
+        lblPoints.setMinWidth(100);
+        getChildren().add(lblPoints);
+
+        lblPoints.textProperty().bind(Bindings.createStringBinding(()->
+                        (gameMovePoints.get()>0)?"+".concat(Integer.toString(gameMovePoints.get())):"",
+                gameMovePoints.asObject()));
+        lblScore.textProperty().bind(gameScoreProperty.asString());
+
+        lblScore.textProperty().addListener((ov,s,s1)->{
+            lblPoints.setLayoutX(0);
+            double midScoreX=vScore.localToScene(vScore.getWidth()/2d,0).getX();
+            lblPoints.setLayoutX(lblPoints.sceneToLocal(midScoreX, 0).getX()-lblPoints.getWidth()/2d);
+        });
+
+        final KeyValue kvO0 = new KeyValue(lblPoints.opacityProperty(), 1);
+        final KeyValue kvY0 = new KeyValue(lblPoints.layoutYProperty(), 20);
+        final KeyValue kvO1 = new KeyValue(lblPoints.opacityProperty(), 0);
+        final KeyValue kvY1 = new KeyValue(lblPoints.layoutYProperty(), 100);
+        final KeyFrame kfO0 = new KeyFrame(Duration.ZERO, kvO0);
+        final KeyFrame kfY0 = new KeyFrame(Duration.ZERO, kvY0);
+        Duration animationDuration = Duration.millis(600);
+        final KeyFrame kfO1 = new KeyFrame(animationDuration, kvO1);
+        final KeyFrame kfY1 = new KeyFrame(animationDuration, kvY1);
+        animateAddedPoints.getKeyFrames().addAll(kfO0,kfY0,kfO1,kfY1);
+
     }
 
     private Rectangle createCell(int i, int j) {
@@ -98,11 +146,11 @@ public class Board extends Group {
     }
 
     private void createGrid() {
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                gridGroup.getChildren().add(createCell(i, j));
-            }
-        }
+
+        GridOperator.traverseGrid((i, j) -> {
+            gridGroup.getChildren().add(createCell(i, j));
+            return 0;
+        });
 
         gridGroup.getStyleClass().add("game-grid");
         hBottom.getStyleClass().add("game-backGrid");
@@ -114,6 +162,9 @@ public class Board extends Group {
         hBottom.setMinSize(GRID_WIDTH, GRID_WIDTH);
         hBottom.setPrefSize(GRID_WIDTH, GRID_WIDTH);
         hBottom.setMaxSize(GRID_WIDTH, GRID_WIDTH);
+
+        Rectangle rect = new Rectangle(GRID_WIDTH, GRID_WIDTH);
+        hBottom.setClip(rect);
 
         hBottom.getChildren().add(gridGroup);
         vGame.getChildren().add(hBottom);
@@ -138,13 +189,73 @@ public class Board extends Group {
         overlay.setMinSize(GRID_WIDTH, GRID_WIDTH);
         overlay.setAlignment(Pos.CENTER);
         overlay.setTranslateY(TOP_HEIGHT + GAP_HEIGHT);
-        overlay.getChildren().setAll(lblOverText);
+
+        overlay.getChildren().setAll(lOvrText);
 
         buttonsOverlay.setAlignment(Pos.CENTER);
         buttonsOverlay.setTranslateY(TOP_HEIGHT + GAP_HEIGHT + GRID_WIDTH / 2);
         buttonsOverlay.setMinSize(GRID_WIDTH, GRID_WIDTH / 2);
         buttonsOverlay.setSpacing(10);
+
+        bTry.getStyleClass().add("game-button");
+        bTry.setOnAction(e->{
+            getChildren().removeAll(overlay, buttonsOverlay);
+            gridGroup.getChildren().removeIf(c->c instanceof Tile);
+            resetGame.set(false);
+            gameScoreProperty.set(0);
+            gameWonProperty.set(false);
+            gameOverProperty.set(false);
+            resetGame.set(true);
+        });
+        bContinue.getStyleClass().add("game-button");
+        bContinue.setOnAction(e->getChildren().removeAll(overlay, buttonsOverlay));
+
+        gameOverProperty.addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                overlay.getStyleClass().setAll("game-overlay","game-overlay-over");
+                lOvrText.setText("Game over!");
+                lOvrText.getStyleClass().setAll("game-label","game-lblOver");
+                buttonsOverlay.getChildren().setAll(bTry);
+                this.getChildren().addAll(overlay,buttonsOverlay);
+            }
+        });
+
+        gameWonProperty.addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                overlay.getStyleClass().setAll("game-overlay","game-overlay-won");
+                lOvrText.setText("You win!");
+                lOvrText.getStyleClass().setAll("game-label","game-lblWon");
+                buttonsOverlay.getChildren().setAll(bContinue, bTry);
+                this.getChildren().addAll(overlay,buttonsOverlay);
+            }
+        });
     }
 
     public Group getGridGroup() { return gridGroup; }
+
+    public void addPoints(int points) {
+        gameMovePoints.set(gameMovePoints.get() + points);
+        gameScoreProperty.set(gameScoreProperty.get() + points);
+    }
+
+    public void setPoints(int points) {
+        gameMovePoints.set(points);
+    }
+
+    public void animateScore() {
+        // Start animating points added.
+        animateAddedPoints.playFromStart();
+    }
+
+    public void setGameWin(boolean won) {
+        gameWonProperty.set(won);
+    }
+
+    public void setGameOver(boolean gameOver){
+        gameOverProperty.set(gameOver);
+    }
+
+    public BooleanProperty resetGameProperty() {
+        return resetGame;
+    }
 }
