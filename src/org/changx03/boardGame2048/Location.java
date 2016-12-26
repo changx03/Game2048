@@ -46,4 +46,32 @@ public class Location {
 
         return new Location(x + direction.getX(), y + direction.getY());
     }
+
+    @Override
+    public String toString() {
+        return "Location{" + "x=" + x + ", y=" + y + '}';
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 61 * hash + this.x;
+        hash = 61 * hash + this.y;
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Location other = (Location) obj;
+        if (this.x != other.x) {
+            return false;
+        }
+        return this.y == other.y;
+    }
 }
